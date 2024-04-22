@@ -15,26 +15,56 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: '10.11-cross-${{github.run_id}}'
-          - os: '11-arm64-cross-${{github.run_id}}'
-          - os: 'ubuntu-latest'
-            container:
-              image: ghcr.io/homebrew/ubuntu22.04:master
-              options: --user=linuxbrew
-            workdir: /github/home
+          - arch: x86_64
+            image: ghcr.io/homebrew/ubuntu22.04:master
+          - arch: aarch64
+            image: zhongruoyu/homebrew-aarch64-linux:ubuntu22.04
       fail-fast: false
-    runs-on: ${{matrix.os}}
-    container: ${{matrix.container}}
+    runs-on: ubuntu-22.04
     defaults:
       run:
-        working-directory: ${{matrix.workdir || github.workspace}}
+        shell: docker exec linuxbrew bash --noprofile --norc -eo pipefail {0}
     steps:
-      - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up container
+        run: |
+          docker create \
+            --name=linuxbrew \
+            --env=GITHUB_ACTIONS=true \
+            --env=CI=true \
+            --platform='linux/${{matrix.arch}}' \
+            --mount=type=bind,src=/home/runner,dst=/home/runner \
+            --workdir='${{github.workspace}}' \
+            --entrypoint=tail \
+            ${{matrix.image}} \
+            -f /dev/null
+          docker start linuxbrew
+        shell: bash
+
+      - name: Set up Homebrew tap repository
+        run: |
+          setfacl -Rm "d:u:linuxbrew:rwX,u:linuxbrew:rwX" /home/runner
+          HOMEBREW_TAP_REPOSITORY="$(brew --repo)/Library/Taps/$(echo '${{github.repository}}' | tr "[:upper:]" "[:lower:]")"
+          mkdir -vp "${HOMEBREW_TAP_REPOSITORY%/*}"
+          ln -vs '${{github.workspace}}' "$HOMEBREW_TAP_REPOSITORY"
+          chown -vR linuxbrew:linuxbrew '${{github.workspace}}'
+        shell: docker exec --user=root linuxbrew bash --noprofile --norc -eo pipefail {0}
+
+      - name: Set up Homebrew tap
+        run: |
+          git init
+          git remote add origin 'https://github.com/${{github.repository}}'
+          git fetch origin '${{github.sha}}' '+refs/heads/*:refs/remotes/origin/*'
+          git remote set-head origin --auto
+          head="$(git symbolic-ref refs/remotes/origin/HEAD)"
+          head="${head#refs/remotes/origin/}"
+          git checkout --force -B "$head" FETCH_HEAD
 
       - run: brew test-bot --only-cleanup-before
 
-      - run: brew test-bot --only-setup
+      - run: brew test-bot --only-setup${{matrix.arch == 'aarch64' && ' || true' || ''}}
 
       - name: Build Portable Ruby
         run: |
@@ -45,8 +75,8 @@ jobs:
       - name: Upload Portable Ruby
         uses: actions/upload-artifact@v4
         with:
-          name: bottles_${{matrix.os}}
-          path: ${{matrix.workdir || github.workspace}}/bottle
+          name: bottles_${{matrix.arch}}
+          path: bottle
 
       - name: Test Portable Ruby
         run: |
@@ -62,3 +92,9 @@ jobs:
         run: |
           brew test-bot --only-cleanup-after
           rm -rvf bottle portable-ruby
+
+      - name: Stop container
+        if: always()
+        run: |
+          docker rm --force linuxbrew
+        shell: bash
