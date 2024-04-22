@@ -1,0 +1,147 @@
+#!/bin/bash
+
+#:  @hide_from_man_page
+#:  * `vendor-install-ruby` [<tar-path>] [--force]
+#:
+#:  Setup GNU tar for bottling.
+#:
+#:  Installing `gnu-tar` on aarch64 Linux has a significant overhead, as it
+#:  pulls in a lot of dependencies. As a workaround, we set up the necessary
+#:  symlinks for `brew` to recognize a GNU tar installation that can be used for
+#:  bottling.
+
+onoe() {
+  # Check whether stderr is a tty.
+  if [[ -n "${HOMEBREW_COLOR}" || (-t 2 && -z "${HOMEBREW_NO_COLOR}") ]]
+  then
+    echo -ne "\\033[4;31mError\\033[0m: " >&2 # highlight Error with underline and red color
+  else
+    echo -n "Error: " >&2
+  fi
+  if [[ $# -eq 0 ]]
+  then
+    cat >&2
+  else
+    echo "$*" >&2
+  fi
+}
+
+odie() {
+  onoe "$@"
+  exit 1
+}
+
+ohai() {
+  # Check whether stdout is a tty.
+  if [[ -n "${HOMEBREW_COLOR}" || (-t 1 && -z "${HOMEBREW_NO_COLOR}") ]]
+  then
+    echo -e "\\033[34m==>\\033[0m \\033[1m$*\\033[0m" # blue arrow and bold text
+  else
+    echo "==> $*"
+  fi
+}
+
+ln() {
+  ln_args=(/bin/ln)
+  if [[ -n "${HOMEBREW_DEBUG}" || -n "${HOMEBREW_VERBOSE}" ]]
+  then
+    ln_args+=(-v)
+  fi
+  if [[ -n "${FORCE}" ]]
+  then
+    ln_args+=(-f)
+  fi
+  "${ln_args[@]}" "$@"
+}
+
+brew() {
+  # This variable is set by bin/brew
+  # shellcheck disable=SC2154
+  "${HOMEBREW_BREW_FILE}" "$@"
+}
+
+for option in "$@"
+do
+  case "${option}" in
+    -\? | -h | --help | --usage)
+      brew help setup-gnu-tar
+      exit $?
+      ;;
+    --verbose) HOMEBREW_VERBOSE=1 ;;
+    --quiet) HOMEBREW_QUIET=1 ;;
+    --debug) HOMEBREW_DEBUG=1 ;;
+    --force) FORCE=1 ;;
+    --*) ;;
+    -*)
+      [[ "${option}" == *v* ]] && HOMEBREW_VERBOSE=1
+      [[ "${option}" == *q* ]] && HOMEBREW_QUIET=1
+      [[ "${option}" == *d* ]] && HOMEBREW_DEBUG=1
+      ;;
+    *)
+      if [[ -z "${TAR}" ]]
+      then
+        TAR="${option}"
+      else
+        odie "This command does not take multiple vendor targets!"
+      fi
+      ;;
+  esac
+done
+
+TAR="${TAR:-/usr/bin/tar}"
+
+[[ -n "${HOMEBREW_DEBUG}" ]] && set -x
+
+if [[ -z "${CI}" && -z "${FORCE}" ]]
+then
+  odie "This script is not intended to be run locally."
+fi
+
+if [[ ! -x "${TAR}" ]]
+then
+  odie "${TAR} is not found or not executable."
+fi
+
+tar_version_string="$("${TAR}" --version | head -n 1)"
+if grep -Fqv "GNU tar" <<<"${tar_version_string}"
+then
+  odie "${TAR} is not GNU tar."
+fi
+
+tar_version="$(grep -Eo '([0-9]+(\.[0-9]+)*)' <<<"${tar_version_string}")"
+if [[ -z "${tar_version}" ]]
+then
+  odie "Could not determine version of tar."
+fi
+
+# HOMEBREW_CELLAR and HOMEBREW_PREFIX are set by brew.sh
+# shellcheck disable=SC2154
+cellar="${HOMEBREW_CELLAR}/gnu-tar/${tar_version}"
+tab="${cellar}/INSTALL_RECEIPT.json"
+if [[ -d "${cellar}" && -z "${FORCE}" ]]
+then
+  odie "\`gnu-tar\` ${tar_version} is already installed at ${cellar}"
+fi
+
+ohai "Setting up GNU tar at ${cellar}"
+if ! mkdir -p "${cellar}/bin"
+then
+  odie "Could not create directory ${cellar}/bin"
+fi
+if ! ln -s "${TAR}" "${cellar}/bin/tar"
+then
+  odie "Could not symlink ${TAR} to ${cellar}/bin/tar"
+fi
+if [[ ! -f "${tab}" ]] && ! touch "${tab}"
+then
+  odie "Could not create ${tab}"
+fi
+# shellcheck disable=SC2154
+if ! ln -s "${cellar}" "${HOMEBREW_PREFIX}/opt/gnu-tar"
+then
+  odie "Could not symlink ${cellar} to ${HOMEBREW_PREFIX}/opt/gnu-tar"
+fi
+if ! brew link gnu-tar
+then
+  odie "Could not link gnu-tar"
+fi

@@ -66,6 +66,11 @@ jobs:
 
       - run: brew test-bot --only-setup${{matrix.arch == 'aarch64' && ' || true' || ''}}
 
+      - name: Set up GNU tar for bottling
+        if: matrix.arch == 'aarch64'
+        run: |
+          brew setup-gnu-tar
+
       - name: Build Portable Ruby
         run: |
           mkdir -p bottle/
