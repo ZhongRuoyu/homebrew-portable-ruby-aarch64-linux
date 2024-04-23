@@ -6,6 +6,12 @@ class BinutilsAT226 < Formula
   sha256 "39c346c87aa4fb14b2f786560aec1d29411b6ec34dce3fe7309fe3dd56949fd8"
   license all_of: ["GPL-2.0-or-later", "GPL-3.0-or-later", "LGPL-2.0-or-later", "LGPL-3.0-only"]
 
+  bottle do
+    root_url "https://ghcr.io/v2/zhongruoyu/zhongruoyu-portable-ruby-aarch64-linux"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2d669271e342091a4e36b6b64a0c39688a237582d6398eff23c10018155a28ca"
+    sha256 cellar: :any_skip_relocation, aarch64_linux: "fa91d4b52ef066a326fa6cc4f4d418b595f751cfe0d186ab6547c3ba90ed5018"
+  end
+
   keg_only :versioned_formula
 
   depends_on "zhongruoyu/portable-ruby-aarch64-linux/bison@3.0" => :build
