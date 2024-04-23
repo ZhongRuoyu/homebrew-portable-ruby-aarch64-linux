@@ -67,6 +67,12 @@ class GlibcAT217 < Formula
   sha256 "a3b2086d5414e602b4b3d5a8792213feb3be664ffc1efe783a829818d3fca37a"
   license all_of: ["GPL-2.0-or-later", "LGPL-2.1-or-later"]
 
+  bottle do
+    root_url "https://ghcr.io/v2/zhongruoyu/zhongruoyu-portable-ruby-aarch64-linux"
+    sha256 x86_64_linux:  "cabeedf20cadac6240d8cef2be399ce0b13e0237cf29c5a2386a23aa32cda988"
+    sha256 aarch64_linux: "3d14e9b48a97c114bf9dac3e889d18aea6a2fe88e41d4f3d610f6a52ee77edf9"
+  end
+
   keg_only :versioned_formula
 
   depends_on GawkRequirement => :build
