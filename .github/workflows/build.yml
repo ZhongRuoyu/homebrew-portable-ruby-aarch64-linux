@@ -33,6 +33,13 @@ jobs:
           docker create \
             --name=linuxbrew \
             --env=GITHUB_ACTIONS=true \
+            --env=GITHUB_BASE_REF="$GITHUB_BASE_REF" \
+            --env=GITHUB_EVENT_NAME="$GITHUB_EVENT_NAME" \
+            --env=GITHUB_OUTPUT="$GITHUB_OUTPUT" \
+            --env=GITHUB_REF="$GITHUB_REF" \
+            --env=GITHUB_REPOSITORY="$GITHUB_REPOSITORY" \
+            --env=GITHUB_REPOSITORY_OWNER="$GITHUB_REPOSITORY_OWNER" \
+            --env=GITHUB_SHA="$GITHUB_SHA" \
             --env=CI=true \
             --platform='linux/${{matrix.arch}}' \
             --mount=type=bind,src=/home/runner,dst=/home/runner \
