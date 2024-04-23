@@ -82,7 +82,7 @@ do
       then
         TAR="${option}"
       else
-        odie "This command does not take multiple vendor targets!"
+        odie "Multiple tar paths are specified."
       fi
       ;;
   esac
