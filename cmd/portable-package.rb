@@ -61,7 +61,7 @@ module Homebrew
         safe_system HOMEBREW_BREW_FILE, "linkage", *verbose, name
         bottle_args = %w[
           --skip-relocation
-          --root-url=https://ghcr.io/v2/homebrew/portable-ruby
+          --root-url=https://ghcr.io/v2/zhongruoyu/zhongruoyu-portable-ruby-aarch64-linux
           --json
           --no-rebuild
         ]
