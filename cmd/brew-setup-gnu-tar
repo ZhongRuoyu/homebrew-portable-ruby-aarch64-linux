@@ -123,7 +123,7 @@ then
   odie "\`gnu-tar\` ${tar_version} is already installed at ${cellar}"
 fi
 
-ohai "Setting up GNU tar at ${cellar}"
+ohai "Setting up \`gnu-tar\` at ${cellar}"
 if ! mkdir -p "${cellar}/bin"
 then
   odie "Could not create directory ${cellar}/bin"
@@ -143,5 +143,5 @@ then
 fi
 if ! brew link gnu-tar
 then
-  odie "Could not link gnu-tar"
+  odie "Could not link \`gnu-tar\`."
 fi
