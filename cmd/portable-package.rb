@@ -36,7 +36,10 @@ module Homebrew
       name = "portable-#{name}" unless name.start_with? "portable-"
       begin
         # On Linux, install glibc@2.13 and linux-headers from bottles and don't install their build dependencies.
-        bottled_dep_allowlist = %w[glibc@2.13 linux-headers@4.4]
+        bottled_dep_allowlist = %w[
+          glibc@2.13
+          linux-headers@4.4 zhongruoyu/portable-ruby-aarch64-linux/linux-headers@4.4
+        ]
         deps = Dependency.expand(Formula[name], cache_key: "portable-package-#{name}") do |_dependent, dep|
           Dependency.prune if dep.test? || dep.optional?
 
