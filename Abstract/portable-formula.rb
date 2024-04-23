@@ -30,6 +30,33 @@ module PortableFormulaMixin
     end
   end
 
+  def portable_cflags
+    @portable_cflags ||= if OS.linux? && Hardware::CPU.arm?
+      gcc = "/usr/bin/gcc"
+      gcc_include_dir = Utils.safe_popen_read(gcc, "--print-file-name=include").chomp
+      gcc_include_fixed_dir = Utils.safe_popen_read(gcc, "--print-file-name=include-fixed").chomp
+      %W[
+        -nostdinc
+        -isystem#{gcc_include_dir}
+        -isystem#{gcc_include_fixed_dir}
+      ].join(" ")
+    else
+      ""
+    end
+  end
+
+  def portable_ldflags
+    @portable_ldflags ||= if OS.linux? && Hardware::CPU.arm?
+      glibc = Formula["zhongruoyu/portable-ruby-aarch64-linux/glibc@2.17"]
+      %W[
+        -B#{glibc.opt_lib}
+        -Wl,-rpath-link=#{glibc.opt_lib}
+      ].join(" ")
+    else
+      ""
+    end
+  end
+
   def install
     if OS.mac?
       if OS::Mac.version > TARGET_MACOS
@@ -60,7 +87,19 @@ module PortableFormulaMixin
       ENV.append_to_cflags "-fPIC"
     end
 
+    ENV.append_to_cflags portable_cflags if portable_cflags.present?
+    ENV.append "LDFLAGS", portable_ldflags if portable_ldflags.present?
+
     super
+
+    return if name != "portable-ruby"
+
+    abi_version = `#{bin}/ruby -rrbconfig -e 'print RbConfig::CONFIG["ruby_version"]'`
+    abi_arch = `#{bin}/ruby -rrbconfig -e 'print RbConfig::CONFIG["arch"]'`
+    inreplace lib/"ruby/#{abi_version}/#{abi_arch}/rbconfig.rb" do |s|
+      s.gsub! portable_cflags, "" if portable_cflags.present?
+      s.gsub! portable_ldflags, "" if portable_ldflags.present?
+    end
   end
 
   def test
@@ -82,8 +121,15 @@ class PortableFormula < Formula
       keg_only "portable formulae are keg-only"
 
       on_linux do
-        depends_on "glibc@2.13" => :build
-        depends_on "linux-headers@4.4" => :build
+        on_arm do
+          depends_on "zhongruoyu/portable-ruby-aarch64-linux/glibc@2.17" => :build
+          depends_on "zhongruoyu/portable-ruby-aarch64-linux/linux-headers@4.4" => :build
+        end
+
+        on_intel do
+          depends_on "glibc@2.13" => :build
+          depends_on "linux-headers@4.4" => :build
+        end
       end
 
       prepend PortableFormulaMixin
