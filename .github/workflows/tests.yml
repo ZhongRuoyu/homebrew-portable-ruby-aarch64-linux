@@ -24,7 +24,7 @@ jobs:
 
   determine-workflow:
     runs-on: ubuntu-latest
-    if: github.event_name != 'push'
+    if: github.event_name == 'pull_request'
     outputs:
       workflow: ${{ steps.determine-workflow.outputs.workflow }}
     steps:
@@ -64,7 +64,7 @@ jobs:
   conclusion:
     needs: [build-deps, build]
     runs-on: ubuntu-latest
-    if: always() && github.event_name != 'push' && !cancelled()
+    if: always() && github.event_name == 'pull_request' && !cancelled()
     steps:
       - name: Result
         run: |
