@@ -7,6 +7,12 @@ class BisonAT30 < Formula
   sha256 "cd399d2bee33afa712bac4b1f4434e20379e9b4099bce47189e09a7675a2d566"
   license "GPL-3.0-or-later"
 
+  bottle do
+    root_url "https://ghcr.io/v2/zhongruoyu/zhongruoyu-portable-ruby-aarch64-linux"
+    sha256 x86_64_linux:  "63faa77be5fca07d1d9daa73dbbf6320607083539dc9c2f5dff63d691e913e15"
+    sha256 aarch64_linux: "7adcb6f6d21c9a3de8dcd633887a44bb90194250ced391905dcb3dc208798cfe"
+  end
+
   keg_only :versioned_formula
 
   depends_on "zhongruoyu/portable-ruby-aarch64-linux/m4@1.4"
