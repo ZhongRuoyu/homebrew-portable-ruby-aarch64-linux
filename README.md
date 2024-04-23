@@ -25,7 +25,7 @@ Copy the bottle `bottle*.tar.gz` and `bottle*.json` files into a directory on yo
 Upload these files to GitHub Packages with:
 
 ```sh
-brew pr-upload --upload-only --root-url=https://ghcr.io/v2/zhongruoyu/homebrew-portable-ruby-aarch64-linux
+brew pr-upload --upload-only --root-url=https://ghcr.io/v2/zhongruoyu/zhongruoyu-portable-ruby-aarch64-linux
 ```
 
 And to GitHub releases:
