@@ -99,12 +99,6 @@ jobs:
           rm -rf "$(brew --repo)/Library/Homebrew/vendor/portable-ruby"
           brew config | awk -v s="${PWD}/portable-ruby/bin/ruby" '$0~s{r=1} 1; END{exit(!r)}'
 
-      - name: Post cleanup
-        if: always()
-        run: |
-          brew test-bot --only-cleanup-after
-          rm -rvf bottle portable-ruby
-
       - name: Stop container
         if: always()
         run: |

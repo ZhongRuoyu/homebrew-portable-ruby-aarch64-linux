@@ -90,12 +90,6 @@ jobs:
           name: bottles_${{matrix.arch}}
           path: bottle
 
-      - name: Post cleanup
-        if: always()
-        run: |
-          brew test-bot --only-cleanup-after
-          rm -rvf bottle portable-ruby
-
       - name: Stop container
         if: always()
         run: |
