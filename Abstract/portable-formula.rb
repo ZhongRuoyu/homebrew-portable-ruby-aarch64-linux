@@ -32,14 +32,21 @@ module PortableFormulaMixin
 
   def portable_cflags
     @portable_cflags ||= if OS.linux? && Hardware::CPU.arm?
-      gcc = "/usr/bin/gcc"
+      cflags = []
+
+      cflags << "-nostdinc"
+      gcc = ENV.cc
       gcc_include_dir = Utils.safe_popen_read(gcc, "--print-file-name=include").chomp
       gcc_include_fixed_dir = Utils.safe_popen_read(gcc, "--print-file-name=include-fixed").chomp
-      %W[
-        -nostdinc
-        -isystem#{gcc_include_dir}
-        -isystem#{gcc_include_fixed_dir}
-      ].join(" ")
+      cflags << "-isystem#{gcc_include_dir}" << "-isystem#{gcc_include_fixed_dir}"
+
+      if DevelopmentTools.gcc_version(gcc) >= "9.3.1"
+        # Out-of-line atomics require an extra package on older systems.
+        # https://learn.arm.com/learning-paths/servers-and-cloud-computing/lse/intro/
+        cflags << "-mno-outline-atomics"
+      end
+
+      cflags.join(" ")
     else
       ""
     end
@@ -85,12 +92,6 @@ module PortableFormulaMixin
 
       # https://github.com/Homebrew/homebrew-portable-ruby/issues/118
       ENV.append_to_cflags "-fPIC"
-
-      if Hardware::CPU.arm? && DevelopmentTools.gcc_version(ENV.cc) >= "9.3.1"
-        # Out-of-line atomics require an extra package on older systems.
-        # https://learn.arm.com/learning-paths/servers-and-cloud-computing/lse/intro/
-        ENV.append_to_cflags "-mno-outline-atomics"
-      end
     end
 
     ENV.append_to_cflags portable_cflags if portable_cflags.present?
