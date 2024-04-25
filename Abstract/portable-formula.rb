@@ -85,6 +85,12 @@ module PortableFormulaMixin
 
       # https://github.com/Homebrew/homebrew-portable-ruby/issues/118
       ENV.append_to_cflags "-fPIC"
+
+      if Hardware::CPU.arm? && DevelopmentTools.gcc_version(ENV.cc) >= "9.3.1"
+        # Out-of-line atomics require an extra package on older systems.
+        # https://learn.arm.com/learning-paths/servers-and-cloud-computing/lse/intro/
+        ENV.append_to_cflags "-mno-outline-atomics"
+      end
     end
 
     ENV.append_to_cflags portable_cflags if portable_cflags.present?
