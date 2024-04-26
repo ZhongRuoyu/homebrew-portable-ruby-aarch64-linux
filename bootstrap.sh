@@ -121,11 +121,11 @@ set_ruby_variables() {
     case "${VENDOR_PROCESSOR}" in
       x86_64)
         ruby_FILENAME="portable-ruby-3.1.4.x86_64_linux.bottle.tar.gz"
-        ruby_SHA="b9fd7d97fc791333e179699bb4d0069743f0cfdd51f6ba190e4b4fcd1b160d09"
+        ruby_SHA="4b9b2437e91a0faf83292a6754f9d8bdcab9b86dd68cd61f392feb2c21338dd6"
         ;;
       aarch64)
         ruby_FILENAME="portable-ruby-3.1.4.aarch64_linux.bottle.tar.gz"
-        ruby_SHA="71d1fcb5a99a7af1af887fd8ace83c4f921a71bd01f2ce3983a3656a6ffc04f9"
+        ruby_SHA="76ef020650b25c92dda7f2375c11577779a6fc7cfec09e5f36111cdeb572d35a"
         ;;
       *) ;;
     esac
