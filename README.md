@@ -58,4 +58,4 @@ where `$VERSION` is the new package version.
 
 ## License
 
-Code is under the [BSD 2 Clause (NetBSD) license](https://github.com/ZhongRuoyu/homebrew-portable-ruby-aarch64-linux/blob/master/LICENSE.txt).
+Code is under the [BSD 2-Clause "Simplified" License](https://github.com/ZhongRuoyu/homebrew-portable-ruby-aarch64-linux/blob/master/LICENSE.txt).
