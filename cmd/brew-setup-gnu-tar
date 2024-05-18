@@ -118,6 +118,11 @@ fi
 # shellcheck disable=SC2154
 cellar="${HOMEBREW_CELLAR}/gnu-tar/${tar_version}"
 tab="${cellar}/INSTALL_RECEIPT.json"
+tab_contents='{
+  "installed_on_request": true
+}
+'
+
 if [[ -d "${cellar}" && -z "${FORCE}" ]]
 then
   odie "\`gnu-tar\` ${tar_version} is already installed at ${cellar}"
@@ -132,9 +137,9 @@ if ! ln -s "${TAR}" "${cellar}/bin/tar"
 then
   odie "Could not symlink ${TAR} to ${cellar}/bin/tar"
 fi
-if [[ ! -f "${tab}" ]] && ! touch "${tab}"
+if ! cat >"${tab}" <<<"${tab_contents}"
 then
-  odie "Could not create ${tab}"
+  odie "Could not write to ${tab}"
 fi
 # shellcheck disable=SC2154
 if ! ln -s "${cellar}" "${HOMEBREW_PREFIX}/opt/gnu-tar"
