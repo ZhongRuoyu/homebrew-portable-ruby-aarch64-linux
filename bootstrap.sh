@@ -120,12 +120,12 @@ set_ruby_variables() {
   then
     case "${VENDOR_PROCESSOR}" in
       x86_64)
-        ruby_FILENAME="portable-ruby-3.1.4.x86_64_linux.bottle.tar.gz"
-        ruby_SHA="4b9b2437e91a0faf83292a6754f9d8bdcab9b86dd68cd61f392feb2c21338dd6"
+        ruby_FILENAME="portable-ruby-3.3.1.x86_64_linux.bottle.tar.gz"
+        ruby_SHA="d69d4d0407dee026610a913609da7112e1c4a6ddbfa56292d5fe8fda61c24423"
         ;;
       aarch64)
-        ruby_FILENAME="portable-ruby-3.1.4.aarch64_linux.bottle.tar.gz"
-        ruby_SHA="76ef020650b25c92dda7f2375c11577779a6fc7cfec09e5f36111cdeb572d35a"
+        ruby_FILENAME="portable-ruby-3.3.1.aarch64_linux.bottle.tar.gz"
+        ruby_SHA="ce5c526d0412bfa56e9247f4fb70d5a41455c3cda63cb2d3691321bba0ecc2c3"
         ;;
       *) ;;
     esac
@@ -151,7 +151,7 @@ set_ruby_variables() {
     fi
     ruby_URLs+=(
       "https://ghcr.io/v2/zhongruoyu/zhongruoyu-portable-ruby-aarch64-linux/portable-ruby/blobs/sha256:${ruby_SHA}"
-      "https://github.com/ZhongRuoyu/homebrew-portable-ruby-aarch64-linux/releases/download/3.1.4/${ruby_FILENAME}"
+      "https://github.com/ZhongRuoyu/homebrew-portable-ruby-aarch64-linux/releases/download/3.3.1/${ruby_FILENAME}"
     )
     ruby_URL="${ruby_URLs[0]}"
   fi
