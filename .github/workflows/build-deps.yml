@@ -41,6 +41,8 @@ jobs:
             --env=GITHUB_REPOSITORY_OWNER="$GITHUB_REPOSITORY_OWNER" \
             --env=GITHUB_SHA="$GITHUB_SHA" \
             --env=CI=true \
+            --env=HOMEBREW_DEVELOPER="$HOMEBREW_DEVELOPER" \
+            --env=HOMEBREW_NO_AUTO_UPDATE="$HOMEBREW_NO_AUTO_UPDATE" \
             --platform='linux/${{matrix.arch}}' \
             --mount=type=bind,src=/home/runner,dst=/home/runner \
             --workdir='${{github.workspace}}' \
