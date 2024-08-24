@@ -32,7 +32,7 @@ safe_cd() {
 
 ohai() {
   # Check whether stdout is a tty.
-  if [[ -n ""${HOMEBREW_COLOR}"" || (-t 1 && -z ""${HOMEBREW_NO_COLOR}"") ]]
+  if [[ -n "${HOMEBREW_COLOR}" || (-t 1 && -z "${HOMEBREW_NO_COLOR}") ]]
   then
     echo -e "\\033[34m==>\\033[0m \\033[1m$*\\033[0m" # blue arrow and bold text
   else
