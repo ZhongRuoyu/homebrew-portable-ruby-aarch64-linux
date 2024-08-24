@@ -77,15 +77,6 @@ class PortableOpenssl < PortableFormula
     ]
   end
 
-  def test_args
-    if OS.linux? && Hardware::CPU.arm?
-      # https://github.com/openssl/openssl/issues/17900
-      %w[TESTS=-test_afalg]
-    else
-      []
-    end
-  end
-
   def install
     # OpenSSL is not fully portable and certificate paths are backed into the library.
     # We therefore need to set the certificate path at runtime via an environment variable.
@@ -95,7 +86,7 @@ class PortableOpenssl < PortableFormula
     openssldir.mkpath
     system "perl", "./Configure", *(configure_args + arch_args)
     system "make"
-    system "make", "test", *test_args
+    system "make", "test"
 
     system "make", "install_dev"
 
