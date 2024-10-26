@@ -141,11 +141,11 @@ set_ruby_variables() {
       case "${ruby_PROCESSOR}" in
         x86_64)
           ruby_TAG="x86_64_linux"
-          ruby_SHA="d69d4d0407dee026610a913609da7112e1c4a6ddbfa56292d5fe8fda61c24423"
+          ruby_SHA="937106c9360f252bc2ea2b9aebf5fe44a40edebaf4f2e0124e599082476332aa"
           ;;
         aarch64)
           ruby_TAG="aarch64_linux"
-          ruby_SHA="ce5c526d0412bfa56e9247f4fb70d5a41455c3cda63cb2d3691321bba0ecc2c3"
+          ruby_SHA="8cbb531399717bdde0b075672e77a99f45c87305919c1c83d8c8ed7e196f2dcc"
           ;;
         *) ;;
       esac
