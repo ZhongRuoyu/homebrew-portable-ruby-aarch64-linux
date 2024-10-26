@@ -111,30 +111,53 @@ fi
 # HOMEBREW_MACOS_VERSION_NUMERIC and HOMEBREW_PROCESSOR are set by brew.sh
 # shellcheck disable=SC2154
 source "${HOMEBREW_LIBRARY}/Homebrew/utils/lock.sh"
+source "${HOMEBREW_LIBRARY}/Homebrew/utils/ruby.sh"
 
 VENDOR_DIR="${HOMEBREW_LIBRARY}/Homebrew/vendor"
 
 # Built from https://github.com/ZhongRuoyu/homebrew-portable-ruby-aarch64-linux.
 set_ruby_variables() {
-  if [[ -n "${HOMEBREW_LINUX}" ]]
+  # Handle the case where /usr/local/bin/brew is run under arm64.
+  # It's a x86_64 installation there (we refuse to install arm64 binaries) so
+  # use a x86_64 Portable Ruby.
+  if [[ -n "${HOMEBREW_MACOS}" && "${VENDOR_PHYSICAL_PROCESSOR}" == "arm64" && "${HOMEBREW_PREFIX}" == "/usr/local" ]]
   then
-    case "${VENDOR_PROCESSOR}" in
-      x86_64)
-        ruby_FILENAME="portable-ruby-3.3.1.x86_64_linux.bottle.tar.gz"
-        ruby_SHA="d69d4d0407dee026610a913609da7112e1c4a6ddbfa56292d5fe8fda61c24423"
-        ;;
-      aarch64)
-        ruby_FILENAME="portable-ruby-3.3.1.aarch64_linux.bottle.tar.gz"
-        ruby_SHA="ce5c526d0412bfa56e9247f4fb70d5a41455c3cda63cb2d3691321bba0ecc2c3"
-        ;;
-      *) ;;
-    esac
+    ruby_PROCESSOR="x86_64"
+    ruby_OS="darwin"
+  else
+    ruby_PROCESSOR="${VENDOR_PHYSICAL_PROCESSOR}"
+    if [[ -n "${HOMEBREW_MACOS}" ]]
+    then
+      ruby_OS="darwin"
+    elif [[ -n "${HOMEBREW_LINUX}" ]]
+    then
+      ruby_OS="linux"
+    fi
   fi
+
+  case "${ruby_OS}" in
+    linux)
+      ruby_TAG="linux"
+      case "${ruby_PROCESSOR}" in
+        x86_64)
+          ruby_TAG="x86_64_linux"
+          ruby_SHA="d69d4d0407dee026610a913609da7112e1c4a6ddbfa56292d5fe8fda61c24423"
+          ;;
+        aarch64)
+          ruby_TAG="aarch64_linux"
+          ruby_SHA="ce5c526d0412bfa56e9247f4fb70d5a41455c3cda63cb2d3691321bba0ecc2c3"
+          ;;
+        *) ;;
+      esac
+      ;;
+    *) ;;
+  esac
 
   # Dynamic variables can't be detected by shellcheck
   # shellcheck disable=SC2034
-  if [[ -n "${ruby_SHA}" && -n "${ruby_FILENAME}" ]]
+  if [[ -n "${ruby_TAG}" && -n "${ruby_SHA}" ]]
   then
+    ruby_FILENAME="portable-ruby-${HOMEBREW_PORTABLE_RUBY_VERSION}.${ruby_TAG}.bottle.tar.gz"
     ruby_URLs=()
     if [[ -n "${HOMEBREW_ARTIFACT_DOMAIN}" ]]
     then
@@ -151,7 +174,7 @@ set_ruby_variables() {
     fi
     ruby_URLs+=(
       "https://ghcr.io/v2/zhongruoyu/zhongruoyu-portable-ruby-aarch64-linux/portable-ruby/blobs/sha256:${ruby_SHA}"
-      "https://github.com/ZhongRuoyu/homebrew-portable-ruby-aarch64-linux/releases/download/3.3.1/${ruby_FILENAME}"
+      "https://github.com/ZhongRuoyu/homebrew-portable-ruby-aarch64-linux/releases/download/${HOMEBREW_PORTABLE_RUBY_VERSION}/${ruby_FILENAME}"
     )
     ruby_URL="${ruby_URLs[0]}"
   fi
@@ -385,6 +408,9 @@ homebrew-vendor-install-ruby() {
   local option
   local url_var
   local sha_var
+
+  unset VENDOR_PHYSICAL_PROCESSOR
+  unset VENDOR_PROCESSOR
 
   for option in "$@"
   do
