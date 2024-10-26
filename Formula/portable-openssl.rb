@@ -3,10 +3,10 @@ require File.expand_path("../Abstract/portable-formula", __dir__)
 class PortableOpenssl < PortableFormula
   desc "Cryptography and SSL/TLS Toolkit"
   homepage "https://openssl.org/"
-  url "https://github.com/openssl/openssl/releases/download/openssl-3.3.0/openssl-3.3.0.tar.gz"
-  mirror "https://www.openssl.org/source/openssl-3.3.0.tar.gz"
-  mirror "http://fresh-center.net/linux/misc/openssl-3.3.0.tar.gz"
-  sha256 "53e66b043322a606abf0087e7699a0e033a37fa13feb9742df35c3a33b18fb02"
+  url "https://github.com/openssl/openssl/releases/download/openssl-3.3.2/openssl-3.3.2.tar.gz"
+  mirror "https://www.openssl.org/source/openssl-3.3.2.tar.gz"
+  mirror "http://fresh-center.net/linux/misc/openssl-3.3.2.tar.gz"
+  sha256 "2e8a40b01979afe8be0bbfb3de5dc1c6709fedb46d6c89c10da114ab5fc3d281"
   license "Apache-2.0"
 
   livecheck do
@@ -28,8 +28,8 @@ class PortableOpenssl < PortableFormula
 
   resource "cacert" do
     # https://curl.se/docs/caextract.html
-    url "https://curl.se/ca/cacert-2024-03-11.pem"
-    sha256 "1794c1d4f7055b7d02c2170337b61b48a2ef6c90d77e95444fd2596f4cac609f"
+    url "https://curl.se/ca/cacert-2024-09-24.pem"
+    sha256 "189d3cf6d103185fba06d76c1af915263c6d42225481a1759e853b33ac857540"
 
     livecheck do
       url "https://curl.se/ca/cadate.t"
@@ -73,16 +73,8 @@ class PortableOpenssl < PortableFormula
       no-legacy
       no-module
       no-shared
+      no-engine
     ]
-  end
-
-  def test_args
-    if OS.linux? && Hardware::CPU.arm?
-      # https://github.com/openssl/openssl/issues/17900
-      %w[TESTS=-test_afalg]
-    else
-      []
-    end
   end
 
   def install
@@ -94,7 +86,7 @@ class PortableOpenssl < PortableFormula
     openssldir.mkpath
     system "perl", "./Configure", *(configure_args + arch_args)
     system "make"
-    system "make", "test", *test_args
+    system "make", "test"
 
     system "make", "install_dev"
 

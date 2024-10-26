@@ -9,6 +9,7 @@ permissions:
 env:
   HOMEBREW_DEVELOPER: 1
   HOMEBREW_NO_AUTO_UPDATE: 1
+  HOMEBREW_TEST_TIMEOUT_SECS: 1800
 
 jobs:
   build:
@@ -43,6 +44,7 @@ jobs:
             --env=CI=true \
             --env=HOMEBREW_DEVELOPER="$HOMEBREW_DEVELOPER" \
             --env=HOMEBREW_NO_AUTO_UPDATE="$HOMEBREW_NO_AUTO_UPDATE" \
+            --env=HOMEBREW_TEST_TIMEOUT_SECS="$HOMEBREW_TEST_TIMEOUT_SECS" \
             --platform='linux/${{matrix.arch}}' \
             --mount=type=bind,src=/home/runner,dst=/home/runner \
             --workdir='${{github.workspace}}' \

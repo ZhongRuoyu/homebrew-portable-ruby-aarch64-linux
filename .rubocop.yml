@@ -7,10 +7,10 @@ AllCops:
   - "**/*.rbi"
   Exclude:
   - Homebrew/sorbet/rbi/{dsl,gems}/**/*.rbi
-  - Homebrew/sorbet/rbi/parlour.rbi
   - Homebrew/bin/*
   - Homebrew/vendor/**/*
   - Taps/*/*/vendor/**/*
+  - "**/vendor/**/*"
   SuggestExtensions:
     rubocop-minitest: false
 Layout/ArgumentAlignment:
@@ -135,6 +135,9 @@ Style/Documentation:
   - "/**/{Formula,Casks}/**/*.rb"
   - "**/{Formula,Casks}/**/*.rb"
   - "**/*.rbi"
+Style/EmptyMethod:
+  Exclude:
+  - "**/*.rbi"
 Style/FetchEnvVar:
   Exclude:
   - Taps/*/*/*.rb
@@ -166,7 +169,7 @@ Style/InvertibleUnlessCondition:
   Enabled: true
   InverseMethods:
     :==: :!=
-    :zero?: 
+    :zero?:
     :blank?: :present?
 Style/MutableConstant:
   EnforcedStyle: strict
@@ -182,12 +185,14 @@ Style/OpenStructUse:
   - Taps/**/*
   - Homebrew/cli/args.rb
   - Homebrew/cli/args.rbi
+Style/OptionalBooleanParameter:
+  AllowedMethods:
+  - respond_to?
+  - respond_to_missing?
 Style/RescueStandardError:
   EnforcedStyle: implicit
 Style/ReturnNil:
   Enabled: true
-Style/SendWithLiteralMethodName:
-  Enabled: false
 Style/StderrPuts:
   Enabled: false
 Style/StringConcatenation:
@@ -222,4 +227,3 @@ Style/UnlessLogicalOperators:
   EnforcedStyle: forbid_logical_operators
 Style/WordArray:
   MinSize: 4
-

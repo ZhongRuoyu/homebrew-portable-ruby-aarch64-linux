@@ -137,6 +137,8 @@ class PortableFormula < Formula
           depends_on "glibc@2.13" => :build
           depends_on "linux-headers@4.4" => :build
         end
+        # When we move from Ubuntu 22.04, on ARM we should add a dependency to glibc@2.35 and linux-headers@5.15.
+        # When doing so, remember to update the C++ Intel conditional in the portable-ruby formula.
       end
 
       prepend PortableFormulaMixin
