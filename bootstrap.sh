@@ -481,7 +481,7 @@ homebrew-vendor-install-ruby() {
 
   CACHED_LOCATION="${HOMEBREW_CACHE}/${VENDOR_FILENAME}"
 
-  lock "vendor-install-${VENDOR_NAME}"
+  lock "vendor-install ${VENDOR_NAME}"
   fetch
   install
 }
