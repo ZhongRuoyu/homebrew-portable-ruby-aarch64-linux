@@ -250,10 +250,15 @@ fetch() {
     curl_args[${#curl_args[*]}]="--progress-bar"
   fi
 
+  # HOMEBREW_MACOS_VERSION_NUMERIC is set by brew.sh
+  # shellcheck disable=SC2154
+  if [[ "${HOMEBREW_MACOS_VERSION_NUMERIC}" -lt "100600" ]]
+  then
+    curl_args[${#curl_args[*]}]="--insecure"
+  fi
+
   temporary_path="${CACHED_LOCATION}.incomplete"
 
-  # HOMEBREW_CACHE is set by brew.sh
-  # shellcheck disable=SC2154
   mkdir -p "${HOMEBREW_CACHE}"
   [[ -n "${HOMEBREW_QUIET}" ]] || ohai "Downloading ${VENDOR_URL}" >&2
   if [[ -f "${CACHED_LOCATION}" ]]
@@ -267,7 +272,7 @@ fetch() {
       if [[ -f "${temporary_path}" ]]
       then
         # HOMEBREW_CURL is set by brew.sh (and isn't misspelt here)
-        # shellcheck disable=SC2153,SC2154
+        # shellcheck disable=SC2153
         "${HOMEBREW_CURL}" "${curl_args[@]}" -C - "${url}" -o "${temporary_path}"
         if [[ $? -eq 33 ]]
         then
@@ -368,8 +373,6 @@ install() {
   [[ -n "${HOMEBREW_QUIET}" ]] || ohai "Pouring ${VENDOR_FILENAME}" >&2
   tar "${tar_args}" "${CACHED_LOCATION}"
 
-  # HOMEBREW_PROCESSOR and HOMEBREW_PHYSICAL_PROCESSOR are set by brew.sh
-  # shellcheck disable=SC2154
   if [[ "${VENDOR_PROCESSOR}" != "${HOMEBREW_PROCESSOR}" ]] ||
      [[ "${VENDOR_PHYSICAL_PROCESSOR}" != "${HOMEBREW_PHYSICAL_PROCESSOR}" ]]
   then
@@ -394,12 +397,12 @@ install() {
     odie "Failed to install ${VENDOR_NAME} ${VENDOR_VERSION}!"
   fi
 
+  local brew_env="${HOMEBREW_PREFIX}/etc/homebrew/brew.env"
   if [[ "${VENDOR_PROCESSOR}" == "aarch64" ]] &&
-     ! grep -qs '^HOMEBREW_FORCE_VENDOR_RUBY=' "${HOMEBREW_PREFIX}/etc/homebrew/brew.env" 2>/dev/null
+     ! grep -qs '^HOMEBREW_FORCE_VENDOR_RUBY=' "${brew_env}" 2>/dev/null
   then
     mkdir -p "${HOMEBREW_PREFIX}/etc/homebrew"
-    echo "HOMEBREW_FORCE_VENDOR_RUBY=1" |
-      tee -a "${HOMEBREW_PREFIX}/etc/homebrew/brew.env" >/dev/null
+    echo "HOMEBREW_FORCE_VENDOR_RUBY=1" >>"${brew_env}"
   fi
   trap - SIGINT
 }
@@ -476,8 +479,8 @@ homebrew-vendor-install-ruby() {
 
   # Expand the name to an array of variables
   # The array name must be "${VENDOR_NAME}_URLs"! Otherwise substitution errors will occur!
-  # shellcheck disable=SC2086,SC2140
-  read -r -a VENDOR_URLs <<<"$(eval "echo "\$\{"${url_var}"s[@]\}"")"
+  # shellcheck disable=SC2086,SC2248
+  read -r -a VENDOR_URLs <<<"$(eval "echo "\$\{${url_var}s[@]\}"")"
 
   CACHED_LOCATION="${HOMEBREW_CACHE}/${VENDOR_FILENAME}"
 
