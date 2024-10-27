@@ -69,8 +69,9 @@ class GlibcAT217 < Formula
 
   bottle do
     root_url "https://ghcr.io/v2/zhongruoyu/zhongruoyu-portable-ruby-aarch64-linux"
-    sha256 x86_64_linux:  "cabeedf20cadac6240d8cef2be399ce0b13e0237cf29c5a2386a23aa32cda988"
-    sha256 aarch64_linux: "3d14e9b48a97c114bf9dac3e889d18aea6a2fe88e41d4f3d610f6a52ee77edf9"
+    rebuild 1
+    sha256 x86_64_linux:  "0202d518c6b1f7c2ef71ba4ebd25afb6366477c269a769d4dfa104e169d14c2b"
+    sha256 aarch64_linux: "fd4ea7170beced1ee87c368fbc4ba73ac80e404e16a9899de397472d3f3f97c4"
   end
 
   keg_only :versioned_formula
