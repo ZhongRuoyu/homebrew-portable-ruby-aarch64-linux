@@ -82,13 +82,23 @@ class GlibcAT217 < Formula
   depends_on LinuxKernelRequirement
 
   on_arm do
-    depends_on "zhongruoyu/portable-ruby-aarch64-linux/binutils@2.26" => :build
     depends_on "zhongruoyu/portable-ruby-aarch64-linux/linux-headers@4.4" => :build
   end
 
   on_intel do
     depends_on "linux-headers@4.4" => :build
   end
+
+  # Backport of:
+  # https://sourceware.org/git/?p=glibc.git;a=commit;h=e9177fba13549a8e2a6232f46080e5c6d3e467b1
+  patch do
+    url "https://git.centos.org/rpms/glibc/raw/ca483cc5b0e3e6a595a2c103755dee4d72f14f25/f/SOURCES/glibc-rh1500908.patch"
+    sha256 "48bfb15f5a26161bbef3d58e18d44876a170ddbfcc5922a39c77fd8da9fe68f6"
+  end
+
+  # Backport of:
+  # https://sourceware.org/git/?p=glibc.git;a=commit;h=43d06ed218fc8be58987bdfd00e21e5720f0b862
+  patch :DATA
 
   def install
     # Fix checking version of gnumake... 4.3, bad
@@ -188,3 +198,83 @@ class GlibcAT217 < Formula
     safe_system "#{bin}/locale", "--version"
   end
 end
+
+__END__
+commit f6610cf4ec687bd37da8c7ea2664df6545e79bf5
+Author: Fangrui Song <maskray@google.com>
+Commit: Ruoyu Zhong <zhongruoyu@outlook.com>
+
+    aarch64: Make elf_machine_{load_address,dynamic} robust [BZ #28203]
+
+    The AArch64 ABI is largely platform agnostic and does not specify
+    _GLOBAL_OFFSET_TABLE_[0] ([1]). glibc ld.so turns out to be probably the
+    only user of _GLOBAL_OFFSET_TABLE_[0] and GNU ld defines the value
+    to the link-time address _DYNAMIC. [2]
+
+    In 2012, __ehdr_start was implemented in GNU ld and gold in binutils
+    2.23.  Using adrp+add / (-mcmodel=tiny) adr to access
+    __ehdr_start/_DYNAMIC gives us a robust way to get the load address and
+    the link-time address of _DYNAMIC.
+
+    [1]: From a psABI maintainer, https://bugs.llvm.org/show_bug.cgi?id=49672#c2
+    [2]: LLD's aarch64 port does not set _GLOBAL_OFFSET_TABLE_[0] to the
+    link-time address _DYNAMIC.
+    LLD is widely used on aarch64 Android and ChromeOS devices.  Software
+    just works without the need for _GLOBAL_OFFSET_TABLE_[0].
+
+    Reviewed-by: Szabolcs Nagy <szabolcs.nagy@arm.com>
+
+diff --git a/ports/sysdeps/aarch64/dl-machine.h b/ports/sysdeps/aarch64/dl-machine.h
+index 94f1108e15..3e4fa7f900 100644
+--- a/ports/sysdeps/aarch64/dl-machine.h
++++ b/ports/sysdeps/aarch64/dl-machine.h
+@@ -31,40 +31,22 @@ elf_machine_matches_host (const ElfW(Ehdr) *ehdr)
+   return ehdr->e_machine == EM_AARCH64;
+ }
+
+-/* Return the link-time address of _DYNAMIC.  Conveniently, this is the
+-   first element of the GOT. */
++/* Return the run-time load address of the shared object.  */
++
+ static inline ElfW(Addr) __attribute__ ((unused))
+-elf_machine_dynamic (void)
++elf_machine_load_address (void)
+ {
+-  ElfW(Addr) addr = (ElfW(Addr)) &_DYNAMIC;
+-  return addr;
++  extern const ElfW(Ehdr) __ehdr_start attribute_hidden;
++  return (ElfW(Addr)) &__ehdr_start;
+ }
+
+-/* Return the run-time load address of the shared object.  */
++/* Return the link-time address of _DYNAMIC.  */
+
+ static inline ElfW(Addr) __attribute__ ((unused))
+-elf_machine_load_address (void)
++elf_machine_dynamic (void)
+ {
+-  /* To figure out the load address we use the definition that for any symbol:
+-     dynamic_addr(symbol) = static_addr(symbol) + load_addr
+-
+-     The choice of symbol is arbitrary. The static address we obtain
+-     by constructing a non GOT reference to the symbol, the dynamic
+-     address of the symbol we compute using adrp/add to compute the
+-     symbol's address relative to the PC. */
+-
+-  ElfW(Addr) static_addr;
+-  ElfW(Addr) dynamic_addr;
+-
+-  asm ("					\n\
+-	adrp	%1, _dl_start;			\n\
+-        add	%1, %1, #:lo12:_dl_start        \n\
+-        ldr	%w0, 1f				\n\
+-	b	2f				\n\
+-1:	.word	_dl_start			\n\
+-2:						\n\
+-       " : "=r" (static_addr),  "=r" (dynamic_addr));
+-  return dynamic_addr - static_addr;
++  extern ElfW(Dyn) _DYNAMIC[] attribute_hidden;
++  return (ElfW(Addr)) _DYNAMIC - elf_machine_load_address ();
+ }
+
+ /* Set up the loaded object described by L so its unrelocated PLT
