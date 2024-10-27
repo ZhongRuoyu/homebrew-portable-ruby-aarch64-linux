@@ -167,7 +167,7 @@ class PortableRuby < PortableFormula
         # Change e.g. `CONFIG["AR"] = "gcc-ar-11"` to `CONFIG["AR"] = "ar"`
         s.gsub!(/(CONFIG\[".+"\] = )"gcc-(.*)-\d+"/, '\\1"\\2"')
         # C++ compiler might have been disabled because we break it with glibc@2.13 builds
-        s.sub!(/(CONFIG\["CXX"\] = )"false"/, '\\1"c++"') if Hardware::CPU.intel?
+        s.sub!(/(CONFIG\["CXX"\] = )"false"/, '\\1"c++"')
       end
 
       # Ship libcrypt.a so that building native gems doesn't need system libcrypt installed.
