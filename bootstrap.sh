@@ -137,7 +137,6 @@ set_ruby_variables() {
 
   case "${ruby_OS}" in
     linux)
-      ruby_TAG="linux"
       case "${ruby_PROCESSOR}" in
         x86_64)
           ruby_TAG="x86_64_linux"
