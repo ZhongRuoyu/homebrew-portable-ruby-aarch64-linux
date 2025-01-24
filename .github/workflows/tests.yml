@@ -67,6 +67,9 @@ jobs:
     if: always() && github.event_name == 'pull_request' && !cancelled()
     steps:
       - name: Result
+        env:
+          BUILD_DEPS_RESULT: ${{ contains(fromJson('["success", "skipped"]'), needs.build-deps.result) }}
+          BUILD_RESULT: ${{ contains(fromJson('["success", "skipped"]'), needs.build.result) }}
         run: |
-          ${{ contains(fromJson('["success", "skipped"]'), needs.build-deps.result) }}
-          ${{ contains(fromJson('["success", "skipped"]'), needs.build.result) }}
+          [[ "${BUILD_DEPS_RESULT}" == success ]]
+          [[ "${BUILD_RESULT}" == success ]]
