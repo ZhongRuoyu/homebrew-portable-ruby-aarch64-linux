@@ -9,78 +9,47 @@ permissions:
 env:
   HOMEBREW_DEVELOPER: 1
   HOMEBREW_NO_AUTO_UPDATE: 1
-  HOMEBREW_TEST_TIMEOUT_SECS: 1800
 
 jobs:
   build:
     strategy:
       matrix:
         include:
-          - arch: x86_64
-            image: ghcr.io/homebrew/ubuntu22.04:master
-          - arch: aarch64
-            image: zhongruoyu/homebrew-aarch64-linux:ubuntu22.04
+          - os: ubuntu-latest
+            container: '{"image": "ghcr.io/homebrew/ubuntu22.04:master", "options": "--user=linuxbrew"}'
+            workdir: /github/home
+          - os: ubuntu-22.04-arm
+            container: '{"image": "rubylang/ruby:3.3.7-jammy"}'
+            bootstrap: true
       fail-fast: false
-    runs-on: ubuntu-22.04
+    runs-on: ${{matrix.os}}
+    container: ${{matrix.container && fromJSON(matrix.container) || ''}}
     defaults:
       run:
-        shell: docker exec linuxbrew bash --noprofile --norc -eo pipefail {0}
+        working-directory: ${{matrix.workdir || github.workspace}}
     steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up container
+      - name: Bootstrap
+        if: matrix.bootstrap
         run: |
-          docker create \
-            --name=linuxbrew \
-            --env=GITHUB_ACTIONS=true \
-            --env=GITHUB_BASE_REF="$GITHUB_BASE_REF" \
-            --env=GITHUB_EVENT_NAME="$GITHUB_EVENT_NAME" \
-            --env=GITHUB_OUTPUT="$GITHUB_OUTPUT" \
-            --env=GITHUB_REF="$GITHUB_REF" \
-            --env=GITHUB_REPOSITORY="$GITHUB_REPOSITORY" \
-            --env=GITHUB_REPOSITORY_OWNER="$GITHUB_REPOSITORY_OWNER" \
-            --env=GITHUB_SHA="$GITHUB_SHA" \
-            --env=CI=true \
-            --env=HOMEBREW_DEVELOPER="$HOMEBREW_DEVELOPER" \
-            --env=HOMEBREW_NO_AUTO_UPDATE="$HOMEBREW_NO_AUTO_UPDATE" \
-            --env=HOMEBREW_TEST_TIMEOUT_SECS="$HOMEBREW_TEST_TIMEOUT_SECS" \
-            --platform='linux/${{matrix.arch}}' \
-            --mount=type=bind,src=/home/runner,dst=/home/runner \
-            --workdir='${{github.workspace}}' \
-            --entrypoint=tail \
-            ${{matrix.image}} \
-            -f /dev/null
-          docker start linuxbrew
-        shell: bash
+          apt-get update
+          apt-get install -y --no-install-recommends curl git g++ make gawk patch
+          mkdir -p /home/linuxbrew/.linuxbrew/bin
+          git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/Homebrew
+          ln -s ../Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew
+          echo "/home/linuxbrew/.linuxbrew/bin" >>"${GITHUB_PATH}"
 
-      - name: Set up Homebrew tap repository
-        run: |
-          setfacl -Rm "d:u:linuxbrew:rwX,u:linuxbrew:rwX" /home/runner
-          HOMEBREW_TAP_REPOSITORY="$(brew --repo)/Library/Taps/$(echo '${{github.repository}}' | tr "[:upper:]" "[:lower:]")"
-          mkdir -vp "${HOMEBREW_TAP_REPOSITORY%/*}"
-          ln -vs '${{github.workspace}}' "$HOMEBREW_TAP_REPOSITORY"
-          chown -vR linuxbrew:linuxbrew '${{github.workspace}}'
-        shell: docker exec --user=root linuxbrew bash --noprofile --norc -eo pipefail {0}
-
-      - name: Set up Homebrew tap
-        run: |
-          git init
-          git remote add origin 'https://github.com/${{github.repository}}'
-          git fetch origin '${{github.sha}}' '+refs/heads/*:refs/remotes/origin/*'
-          git remote set-head origin --auto
-          head="$(git symbolic-ref refs/remotes/origin/HEAD)"
-          head="${head#refs/remotes/origin/}"
-          git checkout --force -B "$head" FETCH_HEAD
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
 
       - run: brew test-bot --only-cleanup-before
 
-      - run: brew test-bot --only-setup${{matrix.arch == 'aarch64' && ' || true' || ''}}
-
       - name: Set up GNU tar for bottling
-        if: matrix.arch == 'aarch64'
+        if: matrix.bootstrap
         run: |
           brew setup-gnu-tar
+
+      - run: brew test-bot --only-setup
+        if: ${{!matrix.bootstrap}}
 
       - name: Build dependencies
         run: |
@@ -91,11 +60,11 @@ jobs:
       - name: Upload bottles
         uses: actions/upload-artifact@v4
         with:
-          name: bottles_${{matrix.arch}}
+          name: bottles_${{matrix.os}}
           path: bottle
 
-      - name: Stop container
+      - name: Post cleanup
         if: always()
         run: |
-          docker rm --force linuxbrew
-        shell: bash
+          brew test-bot --only-cleanup-after
+          rm -rvf bottle portable-ruby
