@@ -71,5 +71,5 @@ jobs:
           BUILD_DEPS_RESULT: ${{ contains(fromJson('["success", "skipped"]'), needs.build-deps.result) }}
           BUILD_RESULT: ${{ contains(fromJson('["success", "skipped"]'), needs.build.result) }}
         run: |
-          [[ "${BUILD_DEPS_RESULT}" == success ]]
-          [[ "${BUILD_RESULT}" == success ]]
+          [[ "${BUILD_DEPS_RESULT}" == true ]]
+          [[ "${BUILD_RESULT}" == true ]]
