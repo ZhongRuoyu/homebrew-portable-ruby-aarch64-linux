@@ -1,5 +1,12 @@
 # Homebrew Portable Ruby for aarch64 Linux
 
+> [!WARNING]
+> This repository is no longer maintained as Homebrew now provides official
+> Portable Ruby builds for AArch64 (ARM64) Linux.
+> Check out the official
+> [Homebrew/homebrew-portable-ruby](https://github.com/Homebrew/homebrew-portable-ruby)
+> repository for the latest updates and releases.
+
 Port of Homebrew's Portable Ruby to aarch64 Linux. This is a fork of Homebrew's tap [`homebrew/portable-ruby`](https://github.com/Homebrew/homebrew-portable-ruby), with modifications to provide aarch64 Linux support.
 
 ## How do I install these formulae
